@@ -261,7 +261,6 @@
 
     <script>
         // *** CONFIGURATION: DEFAULT LIST (Fallback) ***
-        // I have updated this list to match your new 2026 data so it works even if the file load fails.
         let bookedDates = [
             "2026-01-01", 
             "2026-01-02", 
@@ -301,12 +300,17 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             setLanguage('tc');
+            
+            // *** FIX: Render Calendar IMMEDIATELY so it is never empty ***
+            renderCalendar(currentMonth, currentYear);
+
+            // THEN fetch data to update the red dots
             fetchBookings(); 
         });
 
         async function fetchBookings() {
             try {
-                // *** FIX: Add a random number (timestamp) to the URL to force browser to ignore cache ***
+                // Add a random number (timestamp) to the URL to force browser to ignore cache
                 const cacheBuster = '?t=' + new Date().getTime();
                 const response = await fetch(GITHUB_JSON_URL + cacheBuster);
                 
@@ -317,6 +321,7 @@
             } catch (error) {
                 console.log("Could not load external file, using fallback list.");
             }
+            // Re-render to show red dots after data arrives
             renderCalendar(currentMonth, currentYear);
         }
 

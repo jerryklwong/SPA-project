@@ -260,16 +260,13 @@
     </div>
 
     <script>
-        // *** CONFIGURATION: DEFAULT LIST (Fallback) ***
-        let bookedDates = [
-            "2026-01-01", 
-            "2026-01-02", 
-            "2026-01-15"
-        ];
-        
-        // Use external file
-        const GITHUB_JSON_URL = './bookings.json'; 
+        // *** CONFIGURATION: GOOGLE SHEET LINK ***
+        // PASTE YOUR LINK BELOW inside the quotes
+        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2KiVq72Zx7tsJVAw2gOxuCxF7sBQxb1-B7tITywPb1S4MdP3TRT_8UWwXmeEmEZfZcO4tqYV0AITP/pub?output=csv'; 
 
+        // *** CONFIGURATION: DEFAULT LIST (Fallback) ***
+        let bookedDates = []; // Starts empty, fills from Sheet
+        
         const translations = {
             en: {
                 navTitle: "Adapter Booking", linkHome: "Home", linkBooking: "Booking", linkContact: "Contact",
@@ -309,16 +306,28 @@
         });
 
         async function fetchBookings() {
+            // Check if user forgot to paste the link
+            if (SHEET_CSV_URL.includes('PASTE_YOUR')) {
+                console.log("Waiting for user to add Google Sheet Link...");
+                return; 
+            }
+
             try {
                 // Add a random number to avoid cache
-                const cacheBuster = '?t=' + new Date().getTime();
-                const response = await fetch(GITHUB_JSON_URL + cacheBuster);
+                const cacheBuster = '&t=' + new Date().getTime();
+                const response = await fetch(SHEET_CSV_URL + cacheBuster);
                 
                 if (response.ok) {
-                    bookedDates = await response.json();
+                    const csvText = await response.text();
+                    
+                    // PARSE THE CSV: Split by lines, trim spaces
+                    // This turns the text file into a list of dates
+                    bookedDates = csvText.split('\n').map(row => row.trim()).filter(row => row.length > 0);
+                    
+                    console.log("Loaded bookings from Google Sheet:", bookedDates);
                 }
             } catch (error) {
-                console.log("Could not load external file, using fallback list.");
+                console.log("Could not load Google Sheet. Check the link.");
             }
             // Re-render
             renderCalendar(currentMonth, currentYear);
@@ -356,7 +365,10 @@
                 const dateObj = new Date(year, month, day);
                 const dayOfWeek = dateObj.getDay();
                 const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-                const isBooked = bookedDates.includes(dateStr);
+                
+                // Check if any date in the list MATCHES the current day
+                // We use .some() or .includes()
+                const isBooked = bookedDates.some(bookedDate => bookedDate.includes(dateStr));
                 
                 const today = new Date();
                 today.setHours(0,0,0,0);
@@ -406,7 +418,6 @@
             document.getElementById('leg-avail').innerText = t.legendAvail;
             document.getElementById('leg-booked').innerText = t.legendBooked;
 
-            // *** FIXED LOGIC: Toggle button without relying on 'event' ***
             document.querySelectorAll('.lang-switch button').forEach(btn => btn.classList.remove('active'));
             if(lang === 'tc') document.getElementById('btn-tc').classList.add('active');
             if(lang === 'en') document.getElementById('btn-en').classList.add('active');
@@ -426,7 +437,7 @@
             const time = document.getElementById('time').value;
             const subject = `Booking Request: Honnmono Adapter - ${date}`;
             const body = `Hi,\n\nI would like to book the adapter.\n\nName: ${name}\nDelivery Date: ${date}\nTime: ${time}\n\nPlease confirm.`;
-            window.location.href = `mailto:jerryklwong@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.location.href = `mailto:jerry@example.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         }
     </script>
 </body>

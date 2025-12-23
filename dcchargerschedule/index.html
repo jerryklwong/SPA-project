@@ -11,11 +11,12 @@
             --accent-color: #3498db;
             --text-light: #ecf0f1;
             --bg-light: #f4f6f7;
+            --range-bg: #d6eaf8;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
         
-        /* Desktop Layout (Default) */
+        /* Desktop Layout */
         body { height: 100vh; overflow: hidden; display: flex; }
         
         .app-container {
@@ -25,7 +26,7 @@
             height: 100vh;
         }
 
-        /* Sidebar Styles */
+        /* Sidebar */
         .sidebar {
             background-color: var(--primary-color);
             color: var(--text-light);
@@ -52,7 +53,7 @@
         }
         .nav-links li:hover, .nav-links li.active-link { background-color: #34495e; border-left: 4px solid var(--accent-color); }
 
-        /* Main Content Styles */
+        /* Main Content */
         .content {
             background-color: var(--bg-light);
             padding: 40px;
@@ -78,13 +79,23 @@
         .form-group { margin-bottom: 20px; max-width: 100%; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input, select {
-            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; /* 16px prevents zoom on iOS */
+            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;
         }
         .btn-submit {
             background-color: var(--accent-color); color: white; border: none;
             padding: 15px 25px; border-radius: 4px; cursor: pointer; font-size: 1rem; width: 100%;
         }
         .btn-submit:hover { background-color: #2980b9; }
+
+        /* New Warning Message Style */
+        .warning-msg {
+            color: #d35400; /* Orange color */
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none; /* Hidden by default */
+            font-style: italic;
+            line-height: 1.4;
+        }
 
         /* Calendar Styles */
         .calendar-container {
@@ -111,13 +122,29 @@
             background-color: #f0f0f0; color: #bbb; pointer-events: none;
             display: flex; align-items: center; justify-content: center;
         }
+        
+        /* Status Colors */
         .day-available {
             background-color: #d5f5e3; color: #27ae60; cursor: pointer; pointer-events: auto; font-weight: bold;
         }
         .day-booked {
             background-color: #fadbd8; color: #c0392b; text-decoration: line-through;
         }
-        .day-selected { border: 2px solid var(--accent-color); }
+        
+        /* Range Selection Styles */
+        .day-range-start {
+            background-color: var(--accent-color); color: white; border-radius: 4px 0 0 4px;
+        }
+        .day-range-end {
+            background-color: var(--accent-color); color: white; border-radius: 0 4px 4px 0;
+        }
+        .day-in-range {
+            background-color: var(--range-bg); color: var(--primary-color); border-radius: 0;
+        }
+        .day-single-select {
+            background-color: var(--accent-color); color: white; border-radius: 4px;
+        }
+
         .calendar-legend {
             display: flex; gap: 15px; font-size: 0.8rem; margin-top: 15px; flex-wrap: wrap;
         }
@@ -125,51 +152,19 @@
         .dot { width: 10px; height: 10px; border-radius: 50%; }
         .dot-green { background: #27ae60; }
         .dot-red { background: #c0392b; }
+        .dot-blue { background: var(--accent-color); }
 
-        /* --- MOBILE RESPONSIVE FIX --- */
+        /* Mobile Fix */
         @media screen and (max-width: 768px) {
-            body { 
-                flex-direction: column; 
-                height: auto; 
-                overflow-y: auto; /* Enable scrolling on body */
-            }
-            .app-container {
-                display: flex;
-                flex-direction: column;
-                height: auto;
-            }
-            .sidebar {
-                width: 100%;
-                padding: 15px;
-                flex-direction: row;
-                flex-wrap: wrap;
-                justify-content: space-between;
-                align-items: center;
-            }
+            body { flex-direction: column; height: auto; overflow-y: auto; }
+            .app-container { display: flex; flex-direction: column; height: auto; }
+            .sidebar { width: 100%; padding: 15px; flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: center; }
             .header-section h1 { margin: 0; font-size: 1rem; }
             .lang-switch { margin: 0; }
-            .nav-links {
-                width: 100%;
-                display: flex;
-                margin-top: 15px;
-                border-top: 1px solid #34495e;
-            }
-            .nav-links li {
-                flex: 1;
-                text-align: center;
-                border-bottom: none;
-                padding: 10px 5px;
-                font-size: 0.9rem;
-            }
-            .nav-links li.active-link {
-                border-left: none;
-                border-bottom: 4px solid var(--accent-color);
-            }
-            .content {
-                padding: 20px;
-                overflow: visible; /* Let the page grow */
-                height: auto;
-            }
+            .nav-links { width: 100%; display: flex; margin-top: 15px; border-top: 1px solid #34495e; }
+            .nav-links li { flex: 1; text-align: center; border-bottom: none; padding: 10px 5px; font-size: 0.9rem; }
+            .nav-links li.active-link { border-left: none; border-bottom: 4px solid var(--accent-color); }
+            .content { padding: 20px; overflow: visible; height: auto; }
         }
     </style>
 </head>
@@ -208,7 +203,7 @@
 
             <section id="booking" class="page-section">
                 <h2 id="booking-title">Book Schedule</h2>
-                <p id="booking-desc" style="margin-bottom:15px;">Check the calendar below for availability. Red dates are already booked.</p>
+                <p id="booking-desc" style="margin-bottom:15px;">Check the calendar below for availability. Select Start Date and End Date.</p>
 
                 <div class="calendar-container">
                     <div class="calendar-header">
@@ -220,6 +215,7 @@
                     <div class="calendar-legend">
                         <div class="legend-item"><span class="dot dot-green"></span> <span id="leg-avail">Available</span></div>
                         <div class="legend-item"><span class="dot dot-red"></span> <span id="leg-booked">Booked</span></div>
+                        <div class="legend-item"><span class="dot dot-blue"></span> <span id="leg-selected">Your Selection</span></div>
                     </div>
                 </div>
                 
@@ -230,8 +226,14 @@
                     </div>
 
                     <div class="form-group">
-                        <label id="lbl-date">Selected Date:</label>
-                        <input type="text" id="date" required readonly placeholder="Select a green date above">
+                        <label id="lbl-period">Booking Period:</label>
+                        <input type="text" id="booking-period" required readonly placeholder="Select range on calendar">
+                    </div>
+
+                    <div class="form-group">
+                        <label id="lbl-delivery-date">Delivery Date:</label>
+                        <input type="date" id="delivery-date" required onchange="checkDeliveryDate()">
+                        <small id="weekend-msg" class="warning-msg"></small>
                     </div>
 
                     <div class="form-group">
@@ -261,11 +263,12 @@
 
     <script>
         // *** CONFIGURATION: GOOGLE SHEET LINK ***
-        // PASTE YOUR LINK BELOW inside the quotes
-        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2KiVq72Zx7tsJVAw2gOxuCxF7sBQxb1-B7tITywPb1S4MdP3TRT_8UWwXmeEmEZfZcO4tqYV0AITP/pub?output=csv'; 
+        const SHEET_CSV_URL = 'PASTE_YOUR_GOOGLE_SHEET_LINK_HERE'; 
 
-        // *** CONFIGURATION: DEFAULT LIST (Fallback) ***
-        let bookedDates = []; // Starts empty, fills from Sheet
+        // State Variables
+        let bookedDates = [];
+        let selectionStart = null;
+        let selectionEnd = null;
         
         const translations = {
             en: {
@@ -273,20 +276,28 @@
                 homeTitle: "Welcome", productName: "Honnmono DC Adapter (Not Pro)",
                 productDesc: "This adapter allows you to convert GB/T standard charging piles to CCS2 standard. Safe, reliable, and easy to use.",
                 statusAvail: "Available for Rent", bookingTitle: "Book Schedule",
-                bookingDesc: "Check the calendar below for availability. Red dates are already booked.",
-                lblName: "Name:", lblDate: "Selected Date:", lblTime: "Time (Night):",
+                bookingDesc: "Select your Start Date and End Date on the calendar.",
+                lblName: "Name:", 
+                lblPeriod: "Booking Period:", 
+                lblDeliveryDate: "Delivery Date:",
+                lblTime: "Time (Night):",
                 btnSubmit: "Request Booking via Email", contactTitle: "Contact Us",
-                legendAvail: "Available", legendBooked: "Booked"
+                legendAvail: "Available", legendBooked: "Booked", legendSelected: "Selection",
+                weekendMsg: "Hope you well in your holiday, delivery in weekend harms our family times. However let's go into detail after your confirmation. Thanks!"
             },
             tc: {
                 navTitle: "充電轉接器預約", linkHome: "主頁", linkBooking: "預約", linkContact: "聯絡我們",
                 homeTitle: "歡迎", productName: "Honnmono 直流轉接器 (非 Pro 版)",
                 productDesc: "此轉接器可將 GB/T 標準充電樁轉換為 CCS2 標準。安全、可靠、易用。",
                 statusAvail: "可供租用", bookingTitle: "預約時間表",
-                bookingDesc: "請查看下方日曆。紅色日期已被預約。",
-                lblName: "姓名:", lblDate: "已選日期:", lblTime: "時間 (晚間):",
+                bookingDesc: "請在日曆上選擇開始日期和結束日期。",
+                lblName: "姓名:", 
+                lblPeriod: "租用期 (日曆選擇):", 
+                lblDeliveryDate: "交收日期:",
+                lblTime: "交收時間 (晚間):",
                 btnSubmit: "通過電子郵件發送預約", contactTitle: "聯絡資料",
-                legendAvail: "可預約", legendBooked: "已預約"
+                legendAvail: "可預約", legendBooked: "已預約", legendSelected: "您的選擇",
+                weekendMsg: "祝您假期愉快，週末交收難免影響家庭時間。不過讓我們在確認訂單後再詳談細節。謝謝！"
             }
         };
 
@@ -297,39 +308,20 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             setLanguage('tc');
-            
-            // Render Calendar IMMEDIATELY
             renderCalendar(currentMonth, currentYear);
-
-            // THEN fetch data to update the red dots
             fetchBookings(); 
         });
 
         async function fetchBookings() {
-            // Check if user forgot to paste the link
-            if (SHEET_CSV_URL.includes('PASTE_YOUR')) {
-                console.log("Waiting for user to add Google Sheet Link...");
-                return; 
-            }
-
+            if (SHEET_CSV_URL.includes('PASTE_YOUR')) return; 
             try {
-                // Add a random number to avoid cache
                 const cacheBuster = '&t=' + new Date().getTime();
                 const response = await fetch(SHEET_CSV_URL + cacheBuster);
-                
                 if (response.ok) {
                     const csvText = await response.text();
-                    
-                    // PARSE THE CSV: Split by lines, trim spaces
-                    // This turns the text file into a list of dates
                     bookedDates = csvText.split('\n').map(row => row.trim()).filter(row => row.length > 0);
-                    
-                    console.log("Loaded bookings from Google Sheet:", bookedDates);
                 }
-            } catch (error) {
-                console.log("Could not load Google Sheet. Check the link.");
-            }
-            // Re-render
+            } catch (error) { console.log("Error loading sheet"); }
             renderCalendar(currentMonth, currentYear);
         }
 
@@ -341,7 +333,6 @@
             monthTitle.innerText = `${monthNames[month]} ${year}`;
             grid.innerHTML = "";
 
-            // Days Header
             ["S", "M", "T", "W", "T", "F", "S"].forEach(d => {
                 const div = document.createElement('div');
                 div.className = 'calendar-day-name';
@@ -352,9 +343,7 @@
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-            for (let i = 0; i < firstDay; i++) {
-                grid.appendChild(document.createElement('div'));
-            }
+            for (let i = 0; i < firstDay; i++) { grid.appendChild(document.createElement('div')); }
 
             for (let day = 1; day <= daysInMonth; day++) {
                 const div = document.createElement('div');
@@ -363,24 +352,127 @@
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 
                 const dateObj = new Date(year, month, day);
-                const dayOfWeek = dateObj.getDay();
-                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                const isBooked = bookedDates.some(bd => bd.includes(dateStr));
                 
-                // Check if any date in the list MATCHES the current day
-                // We use .some() or .includes()
-                const isBooked = bookedDates.some(bookedDate => bookedDate.includes(dateStr));
-                
-                const today = new Date();
-                today.setHours(0,0,0,0);
+                const today = new Date(); today.setHours(0,0,0,0);
                 const isPast = dateObj < today; 
 
+                // --- LOGIC UPDATE: Removed !isWeekend check here ---
+                // Now weekends are clickable if they are not booked.
+                
                 if (isBooked) {
                     div.classList.add('day-booked');
-                } else if (!isWeekend && !isPast) {
-                    div.classList.add('day-available');
-                    div.onclick = () => selectDate(dateStr, div);
+                } 
+                else if (isInSelection(dateStr)) {
+                    styleSelection(div, dateStr);
+                    div.onclick = () => handleDateClick(dateStr); 
                 }
+                else if (!isPast) { // Weekends allowed now!
+                    div.classList.add('day-available');
+                    div.onclick = () => handleDateClick(dateStr);
+                }
+
                 grid.appendChild(div);
+            }
+        }
+
+        // --- DELIVERY DATE CHECK ---
+        function checkDeliveryDate() {
+            const input = document.getElementById('delivery-date');
+            const msg = document.getElementById('weekend-msg');
+            
+            if(!input.value) {
+                msg.style.display = 'none';
+                return;
+            }
+
+            const date = new Date(input.value);
+            const day = date.getDay(); // 0 = Sun, 6 = Sat
+
+            if (day === 0 || day === 6) {
+                msg.innerText = translations[currentLang].weekendMsg;
+                msg.style.display = 'block';
+            } else {
+                msg.style.display = 'none';
+            }
+        }
+
+        // --- NEW SELECTION LOGIC ---
+        function handleDateClick(dateStr) {
+            if (selectionStart && selectionEnd) {
+                selectionStart = dateStr;
+                selectionEnd = null;
+            }
+            else if (!selectionStart) {
+                selectionStart = dateStr;
+            }
+            else {
+                if (dateStr < selectionStart) {
+                    selectionEnd = selectionStart;
+                    selectionStart = dateStr;
+                } else {
+                    selectionEnd = dateStr;
+                }
+
+                if (!validateRange(selectionStart, selectionEnd)) {
+                    alert(currentLang === 'tc' ? "選擇的範圍內包含已被預約的日期，請重新選擇。" : "Selection includes already booked dates.");
+                    selectionStart = dateStr;
+                    selectionEnd = null;
+                }
+            }
+
+            updateForm();
+            renderCalendar(currentMonth, currentYear);
+        }
+
+        function validateRange(start, end) {
+            let curr = new Date(start);
+            const last = new Date(end);
+            while (curr <= last) {
+                const dStr = curr.toISOString().split('T')[0];
+                if (bookedDates.some(bd => bd.includes(dStr))) return false;
+                curr.setDate(curr.getDate() + 1);
+            }
+            return true;
+        }
+
+        function isInSelection(dateStr) {
+            if (!selectionStart) return false;
+            if (dateStr === selectionStart) return true;
+            if (selectionEnd && dateStr === selectionEnd) return true;
+            if (selectionStart && selectionEnd && dateStr > selectionStart && dateStr < selectionEnd) return true;
+            return false;
+        }
+
+        function styleSelection(div, dateStr) {
+            div.classList.remove('day-available');
+            if (dateStr === selectionStart && dateStr === selectionEnd) {
+                div.classList.add('day-single-select');
+            } else if (dateStr === selectionStart) {
+                div.classList.add('day-range-start');
+            } else if (dateStr === selectionEnd) {
+                div.classList.add('day-range-end');
+            } else {
+                div.classList.add('day-in-range');
+            }
+        }
+
+        function updateForm() {
+            const input = document.getElementById('booking-period');
+            const btn = document.getElementById('btn-submit');
+            
+            if (selectionStart && selectionEnd) {
+                input.value = `${selectionStart} to ${selectionEnd}`;
+                btn.disabled = false;
+                btn.style.opacity = "1";
+            } else if (selectionStart) {
+                input.value = `${selectionStart} (Select End Date)`;
+                btn.disabled = true;
+                btn.style.opacity = "0.5";
+            } else {
+                input.value = "";
+                btn.disabled = true;
+                btn.style.opacity = "0.5";
             }
         }
 
@@ -391,21 +483,12 @@
             renderCalendar(currentMonth, currentYear);
         }
 
-        function selectDate(dateStr, element) {
-            document.querySelectorAll('.day-available').forEach(el => el.classList.remove('day-selected'));
-            element.classList.add('day-selected');
-            document.getElementById('date').value = dateStr;
-            const btn = document.getElementById('btn-submit');
-            btn.disabled = false;
-            btn.style.opacity = "1";
-        }
-
         function setLanguage(lang) {
             currentLang = lang;
             const t = translations[lang];
             const ids = ['nav-title','link-home','link-booking','link-contact','home-title',
                          'product-name','product-desc','status-avail','booking-title','booking-desc',
-                         'lbl-name','lbl-date','lbl-time','btn-submit','contact-title'];
+                         'lbl-name','lbl-period','lbl-delivery-date','lbl-time','btn-submit','contact-title'];
             
             ids.forEach(id => {
                 const el = document.getElementById(id);
@@ -417,10 +500,14 @@
 
             document.getElementById('leg-avail').innerText = t.legendAvail;
             document.getElementById('leg-booked').innerText = t.legendBooked;
+            document.getElementById('leg-selected').innerText = t.legendSelected;
 
             document.querySelectorAll('.lang-switch button').forEach(btn => btn.classList.remove('active'));
             if(lang === 'tc') document.getElementById('btn-tc').classList.add('active');
             if(lang === 'en') document.getElementById('btn-en').classList.add('active');
+
+            // Re-check delivery date msg in case language changed while msg is showing
+            checkDeliveryDate();
         }
 
         function showPage(pageId) {
@@ -433,10 +520,13 @@
         function handleBooking(e) {
             e.preventDefault();
             const name = document.getElementById('name').value;
-            const date = document.getElementById('date').value;
+            const period = document.getElementById('booking-period').value;
+            const deliveryDate = document.getElementById('delivery-date').value;
             const time = document.getElementById('time').value;
-            const subject = `Booking Request: Honnmono Adapter - ${date}`;
-            const body = `Hi,\n\nI would like to book the adapter.\n\nName: ${name}\nDelivery Date: ${date}\nTime: ${time}\n\nPlease confirm.`;
+
+            const subject = `Booking Request: Honnmono Adapter`;
+            const body = `Hi,\n\nI would like to book the adapter.\n\nName: ${name}\nBooking Period: ${period}\n\nDelivery Date: ${deliveryDate}\nTime: ${time}\n\nPlease confirm.`;
+            
             window.location.href = `mailto:jerry@example.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         }
     </script>

@@ -87,14 +87,32 @@
         }
         .btn-submit:hover { background-color: #2980b9; }
 
-        /* New Warning Message Style */
+        /* Warning Message Style */
         .warning-msg {
-            color: #d35400; /* Orange color */
-            font-size: 0.85rem;
-            margin-top: 5px;
-            display: none; /* Hidden by default */
-            font-style: italic;
-            line-height: 1.4;
+            color: #d35400; font-size: 0.85rem; margin-top: 5px;
+            display: none; font-style: italic; line-height: 1.4;
+        }
+
+        /* --- NEW INSTRUCTION BOX STYLE --- */
+        .instruction-box {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        /* State 1: Default / Start */
+        .inst-default {
+            background-color: #e8f8f5; border-left: 5px solid #1abc9c; color: #16a085;
+        }
+        /* State 2: Waiting for End Date */
+        .inst-waiting {
+            background-color: #fef9e7; border-left: 5px solid #f1c40f; color: #d35400;
+        }
+        /* State 3: Done */
+        .inst-success {
+            background-color: #d5f5e3; border-left: 5px solid #27ae60; color: #27ae60;
         }
 
         /* Calendar Styles */
@@ -203,7 +221,7 @@
 
             <section id="booking" class="page-section">
                 <h2 id="booking-title">Book Schedule</h2>
-                <p id="booking-desc" style="margin-bottom:15px;">Check the calendar below for availability. Select Start Date and End Date.</p>
+                <p id="booking-desc" style="margin-bottom:15px;">Check the calendar below for availability.</p>
 
                 <div class="calendar-container">
                     <div class="calendar-header">
@@ -212,6 +230,11 @@
                         <button onclick="changeMonth(1)">&gt;</button>
                     </div>
                     <div class="calendar-grid" id="calendar-grid"></div>
+                    
+                    <div id="instruction-msg" class="instruction-box inst-default">
+                        Please select Start Date.
+                    </div>
+
                     <div class="calendar-legend">
                         <div class="legend-item"><span class="dot dot-green"></span> <span id="leg-avail">Available</span></div>
                         <div class="legend-item"><span class="dot dot-red"></span> <span id="leg-booked">Booked</span></div>
@@ -227,7 +250,7 @@
 
                     <div class="form-group">
                         <label id="lbl-period">Booking Period:</label>
-                        <input type="text" id="booking-period" required readonly placeholder="Select range on calendar">
+                        <input type="text" id="booking-period" required readonly placeholder="Wait for selection...">
                     </div>
 
                     <div class="form-group">
@@ -275,28 +298,36 @@
                 homeTitle: "Welcome", productName: "Honnmono DC Adapter (Not Pro)",
                 productDesc: "This adapter allows you to convert GB/T standard charging piles to CCS2 standard. Safe, reliable, and easy to use.",
                 statusAvail: "Available for Rent", bookingTitle: "Book Schedule",
-                bookingDesc: "Select your Start Date and End Date on the calendar.",
+                bookingDesc: "Check the calendar below for availability.",
                 lblName: "Name:", 
                 lblPeriod: "Booking Period:", 
                 lblDeliveryDate: "Delivery Date:",
                 lblTime: "Time (Night):",
                 btnSubmit: "Request Booking via Email", contactTitle: "Contact Us",
                 legendAvail: "Available", legendBooked: "Booked", legendSelected: "Selection",
-                weekendMsg: "Hope you well in your holiday, delivery in weekend harms our family times. However let's go into detail after your confirmation. Thanks!"
+                weekendMsg: "Hope you well in your holiday, delivery in weekend harms our family times. However let's go into detail after your confirmation. Thanks!",
+                // New Instruction Messages
+                instStart: "Please select Start Date.",
+                instEnd: "Please select End Date. (Click the same date again for 1-day booking)",
+                instDone: "Selected: {start} to {end}. Please fill in the details below."
             },
             tc: {
                 navTitle: "充電轉接器預約", linkHome: "主頁", linkBooking: "預約", linkContact: "聯絡我們",
                 homeTitle: "歡迎", productName: "Honnmono 直流轉接器 (非 Pro 版)",
                 productDesc: "此轉接器可將 GB/T 標準充電樁轉換為 CCS2 標準。安全、可靠、易用。",
                 statusAvail: "可供租用", bookingTitle: "預約時間表",
-                bookingDesc: "請在日曆上選擇開始日期和結束日期。",
+                bookingDesc: "請查看下方日曆。",
                 lblName: "姓名:", 
                 lblPeriod: "租用期 (日曆選擇):", 
                 lblDeliveryDate: "交收日期:",
                 lblTime: "交收時間 (晚間):",
                 btnSubmit: "通過電子郵件發送預約", contactTitle: "聯絡資料",
                 legendAvail: "可預約", legendBooked: "已預約", legendSelected: "您的選擇",
-                weekendMsg: "祝您假期愉快，週末交收難免影響家庭時間。不過讓我們在確認訂單後再詳談細節。謝謝！"
+                weekendMsg: "祝您假期愉快，週末交收難免影響家庭時間。不過讓我們在確認訂單後再詳談細節。謝謝！",
+                // New Instruction Messages
+                instStart: "請選擇開始日期。",
+                instEnd: "請選擇結束日期 (如租用一天，請再次點擊同一日期)。",
+                instDone: "已選擇: {start} 至 {end}。請填寫下方資料。"
             }
         };
 
@@ -382,7 +413,7 @@
             }
 
             const date = new Date(input.value);
-            const day = date.getDay(); // 0 = Sun, 6 = Sat
+            const day = date.getDay(); 
 
             if (day === 0 || day === 6) {
                 msg.innerText = translations[currentLang].weekendMsg;
@@ -392,19 +423,17 @@
             }
         }
 
-        // --- SELECTION LOGIC ---
         function handleDateClick(dateStr) {
-            // Case 1: Start new selection if we already have a full range
+            // Case 1: Reset if full range selected
             if (selectionStart && selectionEnd) {
                 selectionStart = dateStr;
                 selectionEnd = null;
             }
-            // Case 2: No start yet
+            // Case 2: Start new selection
             else if (!selectionStart) {
                 selectionStart = dateStr;
-                // No end date yet, but it acts as a single day booking
             }
-            // Case 3: Have start, selecting end
+            // Case 3: Select End date (can be same as start)
             else {
                 if (dateStr < selectionStart) {
                     selectionEnd = selectionStart;
@@ -420,8 +449,32 @@
                 }
             }
 
+            updateStatusBox(); // Update the instruction text
             updateForm();
             renderCalendar(currentMonth, currentYear);
+        }
+
+        function updateStatusBox() {
+            const box = document.getElementById('instruction-msg');
+            const t = translations[currentLang];
+
+            // Remove all color classes
+            box.classList.remove('inst-default', 'inst-waiting', 'inst-success');
+
+            if (!selectionStart) {
+                // State 1: Nothing selected
+                box.innerText = t.instStart;
+                box.classList.add('inst-default');
+            } else if (selectionStart && !selectionEnd) {
+                // State 2: Start selected, waiting for end
+                box.innerText = t.instEnd;
+                box.classList.add('inst-waiting');
+            } else {
+                // State 3: Both selected
+                const msg = t.instDone.replace('{start}', selectionStart).replace('{end}', selectionEnd);
+                box.innerText = msg;
+                box.classList.add('inst-success');
+            }
         }
 
         function validateRange(start, end) {
@@ -437,8 +490,7 @@
 
         function isInSelection(dateStr) {
             if (!selectionStart) return false;
-            // Treat as single selection if start matches and end is null
-            if (dateStr === selectionStart && !selectionEnd) return true;
+            if (dateStr === selectionStart) return true;
             if (selectionEnd && dateStr === selectionEnd) return true;
             if (selectionStart && selectionEnd && dateStr > selectionStart && dateStr < selectionEnd) return true;
             return false;
@@ -447,38 +499,36 @@
         function styleSelection(div, dateStr) {
             div.classList.remove('day-available');
             
-            // Show single selection properly
-            if (selectionStart && !selectionEnd && dateStr === selectionStart) {
-                div.classList.add('day-single-select');
-            }
-            else if (dateStr === selectionStart && dateStr === selectionEnd) {
+            if (dateStr === selectionStart && dateStr === selectionEnd) {
                 div.classList.add('day-single-select');
             } else if (dateStr === selectionStart) {
                 div.classList.add('day-range-start');
             } else if (dateStr === selectionEnd) {
                 div.classList.add('day-range-end');
-            } else {
+            } else if (selectionEnd) { // Only highlight range if End is selected
                 div.classList.add('day-in-range');
+            } else {
+                // Start selected, waiting for end - make it look active
+                div.classList.add('day-single-select');
             }
         }
 
-        // --- FORM LOGIC: Enable if Start exists ---
         function updateForm() {
             const input = document.getElementById('booking-period');
             const btn = document.getElementById('btn-submit');
             
-            if (selectionStart) {
-                // If only start exists, assume single day
-                const end = selectionEnd || selectionStart;
-                
-                if (selectionStart === end) {
+            if (selectionStart && selectionEnd) {
+                if (selectionStart === selectionEnd) {
                     input.value = `${selectionStart} (1 Day)`;
                 } else {
-                    input.value = `${selectionStart} to ${end}`;
+                    input.value = `${selectionStart} to ${selectionEnd}`;
                 }
-                
                 btn.disabled = false;
                 btn.style.opacity = "1";
+            } else if (selectionStart) {
+                input.value = `${selectionStart} ...`;
+                btn.disabled = true;
+                btn.style.opacity = "0.5";
             } else {
                 input.value = "";
                 btn.disabled = true;
@@ -517,6 +567,7 @@
             if(lang === 'en') document.getElementById('btn-en').classList.add('active');
 
             checkDeliveryDate();
+            updateStatusBox(); // Update instruction language too
         }
 
         function showPage(pageId) {
@@ -529,10 +580,7 @@
         function handleBooking(e) {
             e.preventDefault();
             const name = document.getElementById('name').value;
-            // Manually get the period to ensure it's correct for email
-            const end = selectionEnd || selectionStart;
-            const period = (selectionStart === end) ? `${selectionStart} (1 Day)` : `${selectionStart} to ${end}`;
-            
+            const period = (selectionStart === selectionEnd) ? `${selectionStart} (1 Day)` : `${selectionStart} to ${selectionEnd}`;
             const deliveryDate = document.getElementById('delivery-date').value;
             const time = document.getElementById('time').value;
 

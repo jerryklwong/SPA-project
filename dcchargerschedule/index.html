@@ -180,8 +180,8 @@
             <div class="header-section">
                 <h1 id="nav-title">Adapter Booking</h1>
                 <div class="lang-switch">
-                    <button onclick="setLanguage('tc')" class="active">中文</button>
-                    <button onclick="setLanguage('en')">EN</button>
+                    <button id="btn-tc" onclick="setLanguage('tc')" class="active">中文</button>
+                    <button id="btn-en" onclick="setLanguage('en')">EN</button>
                 </div>
             </div>
             <ul class="nav-links">
@@ -301,7 +301,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             setLanguage('tc');
             
-            // *** FIX: Render Calendar IMMEDIATELY so it is never empty ***
+            // Render Calendar IMMEDIATELY
             renderCalendar(currentMonth, currentYear);
 
             // THEN fetch data to update the red dots
@@ -310,18 +310,17 @@
 
         async function fetchBookings() {
             try {
-                // Add a random number (timestamp) to the URL to force browser to ignore cache
+                // Add a random number to avoid cache
                 const cacheBuster = '?t=' + new Date().getTime();
                 const response = await fetch(GITHUB_JSON_URL + cacheBuster);
                 
                 if (response.ok) {
                     bookedDates = await response.json();
-                    console.log("Loaded bookings from file:", bookedDates);
                 }
             } catch (error) {
                 console.log("Could not load external file, using fallback list.");
             }
-            // Re-render to show red dots after data arrives
+            // Re-render
             renderCalendar(currentMonth, currentYear);
         }
 
@@ -359,7 +358,6 @@
                 const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
                 const isBooked = bookedDates.includes(dateStr);
                 
-                // Set today to midnight for correct comparison
                 const today = new Date();
                 today.setHours(0,0,0,0);
                 const isPast = dateObj < today; 
@@ -400,18 +398,18 @@
             ids.forEach(id => {
                 const el = document.getElementById(id);
                 if(el) {
-                    const key = id.replace(/-([a-z])/g, (g) => g[1].toUpperCase()); // convert id to camelCase key
+                    const key = id.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
                     if(t[key]) el.innerText = t[key];
                 }
             });
 
-            // Specific manual updates
             document.getElementById('leg-avail').innerText = t.legendAvail;
             document.getElementById('leg-booked').innerText = t.legendBooked;
 
-            const buttons = document.querySelectorAll('.lang-switch button');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            // *** FIXED LOGIC: Toggle button without relying on 'event' ***
+            document.querySelectorAll('.lang-switch button').forEach(btn => btn.classList.remove('active'));
+            if(lang === 'tc') document.getElementById('btn-tc').classList.add('active');
+            if(lang === 'en') document.getElementById('btn-en').classList.add('active');
         }
 
         function showPage(pageId) {

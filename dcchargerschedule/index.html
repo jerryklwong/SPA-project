@@ -93,7 +93,7 @@
             display: none; font-style: italic; line-height: 1.4;
         }
 
-        /* --- NEW INSTRUCTION BOX STYLE --- */
+        /* Instruction Box Style */
         .instruction-box {
             margin-top: 15px;
             padding: 12px;
@@ -102,18 +102,9 @@
             font-weight: bold;
             transition: all 0.3s;
         }
-        /* State 1: Default / Start */
-        .inst-default {
-            background-color: #e8f8f5; border-left: 5px solid #1abc9c; color: #16a085;
-        }
-        /* State 2: Waiting for End Date */
-        .inst-waiting {
-            background-color: #fef9e7; border-left: 5px solid #f1c40f; color: #d35400;
-        }
-        /* State 3: Done */
-        .inst-success {
-            background-color: #d5f5e3; border-left: 5px solid #27ae60; color: #27ae60;
-        }
+        .inst-default { background-color: #e8f8f5; border-left: 5px solid #1abc9c; color: #16a085; }
+        .inst-waiting { background-color: #fef9e7; border-left: 5px solid #f1c40f; color: #d35400; }
+        .inst-success { background-color: #d5f5e3; border-left: 5px solid #27ae60; color: #27ae60; }
 
         /* Calendar Styles */
         .calendar-container {
@@ -135,32 +126,41 @@
             display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center;
         }
         .calendar-day-name { font-size: 0.8rem; color: #7f8c8d; margin-bottom: 5px; }
+        
+        /* *** CSS FIX: Ensure calendar days are clickable when selected *** */
         .calendar-day {
             padding: 10px 0; font-size: 0.9rem; border-radius: 4px;
-            background-color: #f0f0f0; color: #bbb; pointer-events: none;
+            background-color: #f0f0f0; color: #bbb; 
+            pointer-events: none; /* Default to not clickable */
             display: flex; align-items: center; justify-content: center;
         }
         
         /* Status Colors */
         .day-available {
-            background-color: #d5f5e3; color: #27ae60; cursor: pointer; pointer-events: auto; font-weight: bold;
+            background-color: #d5f5e3; color: #27ae60; 
+            cursor: pointer; pointer-events: auto; /* Clickable */
+            font-weight: bold;
         }
         .day-booked {
             background-color: #fadbd8; color: #c0392b; text-decoration: line-through;
         }
         
-        /* Range Selection Styles */
+        /* Range Selection Styles - ADDED POINTER EVENTS AUTO HERE */
         .day-range-start {
             background-color: var(--accent-color); color: white; border-radius: 4px 0 0 4px;
+            cursor: pointer; pointer-events: auto; /* Clickable */
         }
         .day-range-end {
             background-color: var(--accent-color); color: white; border-radius: 0 4px 4px 0;
+            cursor: pointer; pointer-events: auto; /* Clickable */
         }
         .day-in-range {
             background-color: var(--range-bg); color: var(--primary-color); border-radius: 0;
+            cursor: pointer; pointer-events: auto; /* Clickable */
         }
         .day-single-select {
             background-color: var(--accent-color); color: white; border-radius: 4px;
+            cursor: pointer; pointer-events: auto; /* Clickable */
         }
 
         .calendar-legend {
@@ -306,7 +306,6 @@
                 btnSubmit: "Request Booking via Email", contactTitle: "Contact Us",
                 legendAvail: "Available", legendBooked: "Booked", legendSelected: "Selection",
                 weekendMsg: "Hope you well in your holiday, delivery in weekend harms our family times. However let's go into detail after your confirmation. Thanks!",
-                // New Instruction Messages
                 instStart: "Please select Start Date.",
                 instEnd: "Please select End Date. (Click the same date again for 1-day booking)",
                 instDone: "Selected: {start} to {end}. Please fill in the details below."
@@ -324,7 +323,6 @@
                 btnSubmit: "通過電子郵件發送預約", contactTitle: "聯絡資料",
                 legendAvail: "可預約", legendBooked: "已預約", legendSelected: "您的選擇",
                 weekendMsg: "祝您假期愉快，週末交收難免影響家庭時間。不過讓我們在確認訂單後再詳談細節。謝謝！",
-                // New Instruction Messages
                 instStart: "請選擇開始日期。",
                 instEnd: "請選擇結束日期 (如租用一天，請再次點擊同一日期)。",
                 instDone: "已選擇: {start} 至 {end}。請填寫下方資料。"
@@ -449,7 +447,7 @@
                 }
             }
 
-            updateStatusBox(); // Update the instruction text
+            updateStatusBox(); 
             updateForm();
             renderCalendar(currentMonth, currentYear);
         }
@@ -458,19 +456,15 @@
             const box = document.getElementById('instruction-msg');
             const t = translations[currentLang];
 
-            // Remove all color classes
             box.classList.remove('inst-default', 'inst-waiting', 'inst-success');
 
             if (!selectionStart) {
-                // State 1: Nothing selected
                 box.innerText = t.instStart;
                 box.classList.add('inst-default');
             } else if (selectionStart && !selectionEnd) {
-                // State 2: Start selected, waiting for end
                 box.innerText = t.instEnd;
                 box.classList.add('inst-waiting');
             } else {
-                // State 3: Both selected
                 const msg = t.instDone.replace('{start}', selectionStart).replace('{end}', selectionEnd);
                 box.innerText = msg;
                 box.classList.add('inst-success');
@@ -505,10 +499,9 @@
                 div.classList.add('day-range-start');
             } else if (dateStr === selectionEnd) {
                 div.classList.add('day-range-end');
-            } else if (selectionEnd) { // Only highlight range if End is selected
+            } else if (selectionEnd) {
                 div.classList.add('day-in-range');
             } else {
-                // Start selected, waiting for end - make it look active
                 div.classList.add('day-single-select');
             }
         }
@@ -567,7 +560,7 @@
             if(lang === 'en') document.getElementById('btn-en').classList.add('active');
 
             checkDeliveryDate();
-            updateStatusBox(); // Update instruction language too
+            updateStatusBox(); 
         }
 
         function showPage(pageId) {
